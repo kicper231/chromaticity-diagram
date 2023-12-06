@@ -18,6 +18,8 @@ namespace GKprojekt3
         public XYZ[] dane = new XYZ[781];
         public bool tlo = true;
         int number = 4;
+        double k = 0;
+        Color punktu;
 
         List<Point> controlPoints = new List<Point>();
         int catched;
@@ -28,11 +30,12 @@ namespace GKprojekt3
 
             controlPoints = new List<Point>()
     {
-        new Point(300, 200), // Punkt startowy
-        new Point(70, 400),  // Punkt kontrolny 1
-        new Point(100, 200),// Punkt kontrolny 2
-        new Point(150, 500),// Punkt kontrolny 3
-        // Dodaj wiêcej punktów wed³ug potrzeb
+       
+        new Point(70, 400), 
+        new Point(100, 200),
+        new Point(150, 500),
+         new Point(300, 200)
+
     };
 
             //wczytan dane 
@@ -175,7 +178,6 @@ namespace GKprojekt3
             }
 
 
-
             double suma1 = berziew.X + berziew.Y + berziew.Z;
             double x1 = 0; ; double y1 = 0;
             if (suma1 != 0)
@@ -188,9 +190,11 @@ namespace GKprojekt3
             int xpunkt1 = (int)(500 * x1 + margin);
             int ypunkt1 = 600 - (int)(500 * y1 + margin);
 
-
-
-            e.Graphics.FillEllipse(Brushes.Black, xpunkt1, ypunkt1, 8, 8);
+            (int R1, int G1, int B1) = ConvertXYZtoRGB(berziew.X / k, berziew.Y / k, berziew.Z / k);
+            using (SolidBrush brush = new SolidBrush(Color.FromArgb(R1, G1, B1)))
+            {
+                g.FillEllipse(brush, xpunkt1, ypunkt1, 8, 8);
+            }
             e.Graphics.DrawString($"{Math.Round(x1, 3)} {Math.Round(y1, 3)}", new Font("Arial", 8), Brushes.Black, xpunkt1 - 5, ypunkt1 + 7);
 
 
@@ -227,7 +231,7 @@ namespace GKprojekt3
                     double x = double.Parse(parts[1], CultureInfo.InvariantCulture);
                     double y = double.Parse(parts[2], CultureInfo.InvariantCulture);
                     double z = double.Parse(parts[3], CultureInfo.InvariantCulture);
-
+                    k += y;
                     dane[index++] = new XYZ(x, y, z);
 
                     if (index >= 781) break;
@@ -288,8 +292,17 @@ namespace GKprojekt3
             if (catchedbool)
             {
                 if (e.X > margin + 20 && e.Y > margin && e.Y < 600 - margin && e.X < 570)
-                    controlPoints[catched] = new Point(e.X, e.Y);
+                { 
 
+             
+                bool canMoveRight = catched == controlPoints.Count - 1 || controlPoints[catched + 1].X > e.X;
+                bool canMoveLeft = catched == 0 || controlPoints[catched - 1].X < e.X;
+                if (canMoveLeft && canMoveRight)
+                {
+                    controlPoints[catched] = new Point(e.X, e.Y);
+                }
+
+                }
 
                 widmo.Invalidate();
             }
@@ -330,12 +343,13 @@ namespace GKprojekt3
             int ggg = 0;
             double xpoint2 = 0;
             double ypoint2 = 0;
-
+            //obliczenie punktów bezierewa
             for (double t = 0; t <= 1; t += 0.01)
             {
                 int i = 0;
                 xpoint2 = 0;
                 ypoint2 = 0;
+                //obliczenie danego punktu
                 foreach (var points in controlPoints)
                 {
 
@@ -346,8 +360,8 @@ namespace GKprojekt3
                 }
 
 
-                // zamiana na skale czyli od 380- 780 y i x: 0-1.8
-
+             
+                // przeksztalcenie na wspoprzedne fali 
                 double x1 = (xpoint1 - margin - 20) / 500 * 400 + 380;
                 double x2 = (xpoint2 - margin - 20) / 500 * 400 + 380;
                 double y1 = ((ypoint1 - margin) / 500 * 1.8);
@@ -355,13 +369,13 @@ namespace GKprojekt3
 
                 XYZ p1 = dane[(int)x1];
                 XYZ p2 = dane[(int)x2];
-
+                //calkowanie prostokatne punktu srodowego 
                 double xm = (x1 + x2) / 2;
                 double ym = (y1 + y2) / 2;
                 XYZ pm = dane[(int)xm];
 
                 int roznica = Math.Abs((((int)xpoint2 - (int)xpoint1)));
-
+                //wzór 
                 berziew.X += pm.X * ym * roznica;
                 berziew.Y += pm.Y * ym * roznica;
                 berziew.Z += pm.Z * ym * roznica;
@@ -381,7 +395,20 @@ namespace GKprojekt3
             }
 
             g.DrawLine(new Pen(Color.Black, 2), (int)xpoint1, (int)ypoint1, (int)xpointend, (int)ypointed);
-           
+            double suma2 = berziew.X + berziew.Y + berziew.Z;
+            double x3 = 0; ; double y3 = 0;
+            if (suma2 != 0)
+            {
+                x3 = berziew.X / suma2;
+                y3 = berziew.Y / suma2;
+            }
+
+
+            int xpunkt1 = (int)(500 * x3 + margin);
+            int ypunkt1 = 600 - (int)(500 * y3 + margin);
+
+          
+            
             podkowa.Invalidate();
         }
 
@@ -406,6 +433,7 @@ namespace GKprojekt3
                 int y = start.Y;
                 controlPoints.Add(new Point(x, y));
             }
+            controlPoints.Reverse();
         }
     }
 }
