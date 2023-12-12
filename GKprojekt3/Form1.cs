@@ -7,12 +7,17 @@ using System.Globalization;
 using System.Numerics;
 using System.Runtime.Intrinsics;
 using System.Drawing;
+using System.Reflection;
+using System.Drawing.Imaging;
+using System.Security.Policy;
+using System.Security.Cryptography;
 
 
 namespace GKprojekt3
 {
     public partial class Form1 : Form
     {
+        public Color kolorek;
         public bool obramowka = true;
         public int margin = 50;
         public XYZ[] dane = new XYZ[781];
@@ -30,11 +35,11 @@ namespace GKprojekt3
 
             controlPoints = new List<Point>()
     {
-       
-        new Point(70, 400), 
+
+        new Point(70, 400),
         new Point(100, 200),
         new Point(150, 500),
-         new Point(300, 200)
+         new Point(500, 200)
 
     };
 
@@ -57,6 +62,13 @@ namespace GKprojekt3
 
 
 
+            // Twoje rysowanie tutaj, np.:
+            // g.DrawLine(arrowPen, new Point(margin, height - margin), new Point(width - margin, height - margin)); // Oœ X
+            // itd.
+
+            // Przypisz wyrenderowany obraz do kontrolki
+
+
 
             Pen arrowPen = new Pen(Brushes.Black, 1)
             {
@@ -67,9 +79,9 @@ namespace GKprojekt3
 
 
 
-            
-              //  g.DrawBeziers(Pens.Black, controlPoints.ToArray());
-            
+
+            //  g.DrawBeziers(Pens.Black, controlPoints.ToArray());
+
 
 
             foreach (var point in controlPoints)
@@ -103,6 +115,7 @@ namespace GKprojekt3
         {
 
             Graphics g = e.Graphics;
+
             if (tlo)
             {
                 Image img = Properties.Resources.pngwing_com;
@@ -115,7 +128,7 @@ namespace GKprojekt3
                 Rectangle destRect = new Rectangle(margin, 600 - newHeight - margin, newWidth, newHeight);
 
 
-                e.Graphics.DrawImage(img, destRect);
+                g.DrawImage(img, destRect);
             }
 
 
@@ -129,7 +142,7 @@ namespace GKprojekt3
 
             if (obramowka)
             {
-                for (int i = 380; i <= 700; ++i)
+                for (int i = 380; i <= 780; ++i)
                 {
 
                     XYZ xyz = dane[i];
@@ -153,7 +166,7 @@ namespace GKprojekt3
                         int ypunkt = 600 - (int)(500 * y + margin);
 
 
-                        e.Graphics.FillEllipse(brush, xpunkt, ypunkt, 8, 8);
+                        g.FillEllipse(brush, xpunkt, ypunkt, 8, 8);
                     }
                 }
             }
@@ -180,12 +193,16 @@ namespace GKprojekt3
 
             double suma1 = berziew.X + berziew.Y + berziew.Z;
             double x1 = 0; ; double y1 = 0;
+            double z1 = 0;
             if (suma1 != 0)
             {
                 x1 = berziew.X / suma1;
                 y1 = berziew.Y / suma1;
+                z1 = berziew.Z / suma1;
             }
 
+            //double x1 = berziew.X / k;
+            //double y1 = berziew.Y / k;
 
             int xpunkt1 = (int)(500 * x1 + margin);
             int ypunkt1 = 600 - (int)(500 * y1 + margin);
@@ -195,9 +212,10 @@ namespace GKprojekt3
             {
                 g.FillEllipse(brush, xpunkt1, ypunkt1, 8, 8);
             }
-            e.Graphics.DrawString($"{Math.Round(x1, 3)} {Math.Round(y1, 3)}", new Font("Arial", 8), Brushes.Black, xpunkt1 - 5, ypunkt1 + 7);
+            g.DrawString($"{Math.Round(x1, 3)} {Math.Round(y1, 3)}", new Font("Arial", 8), Brushes.Black, xpunkt1 - 5, ypunkt1 + 7);
 
-
+            
+            
 
         }
 
@@ -238,6 +256,29 @@ namespace GKprojekt3
                 }
             }
 
+
+
+
+            using (StringReader reader = new StringReader(Properties.Resources.drugietxt))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+
+                    string[] parts = line.Split(',');
+
+
+                    int lineNumber = int.Parse(parts[0].Trim());
+                    double x = double.Parse(parts[1].Trim(), CultureInfo.InvariantCulture);
+                    double y = double.Parse(parts[2].Trim(), CultureInfo.InvariantCulture);
+                    double z = double.Parse(parts[3].Trim(), CultureInfo.InvariantCulture);
+                    if (lineNumber >= 781) break;
+                    dane[lineNumber] = new XYZ(x, y, z);
+
+
+
+                }
+            }
 
         }
 
@@ -292,15 +333,15 @@ namespace GKprojekt3
             if (catchedbool)
             {
                 if (e.X > margin + 20 && e.Y > margin && e.Y < 600 - margin && e.X < 570)
-                { 
-
-             
-                bool canMoveRight = catched == controlPoints.Count - 1 || controlPoints[catched + 1].X > e.X;
-                bool canMoveLeft = catched == 0 || controlPoints[catched - 1].X < e.X;
-                if (canMoveLeft && canMoveRight)
                 {
-                    controlPoints[catched] = new Point(e.X, e.Y);
-                }
+
+
+                    bool canMoveRight = catched == controlPoints.Count - 1 || controlPoints[catched + 1].X > e.X;
+                    bool canMoveLeft = catched == 0 || controlPoints[catched - 1].X < e.X;
+                    if (canMoveLeft && canMoveRight)
+                    {
+                        controlPoints[catched] = new Point(e.X, e.Y);
+                    }
 
                 }
 
@@ -337,7 +378,7 @@ namespace GKprojekt3
 
             double xpoint1 = controlPoints[0].X;
             double ypoint1 = controlPoints[0].Y;
-            double xpointend=controlPoints.Last().X;
+            double xpointend = controlPoints.Last().X;
             double ypointed = controlPoints.Last().Y;
 
             int ggg = 0;
@@ -360,7 +401,7 @@ namespace GKprojekt3
                 }
 
 
-             
+
                 // przeksztalcenie na wspoprzedne fali 
                 double x1 = (xpoint1 - margin - 20) / 500 * 400 + 380;
                 double x2 = (xpoint2 - margin - 20) / 500 * 400 + 380;
@@ -379,9 +420,9 @@ namespace GKprojekt3
                 berziew.X += pm.X * ym * roznica;
                 berziew.Y += pm.Y * ym * roznica;
                 berziew.Z += pm.Z * ym * roznica;
-                if (ggg==0)
+                if (ggg == 0)
                     ggg = ggg;
-                 g.DrawLine(new Pen(Color.Black,2), (int)xpoint1, (int)ypoint1 , (int)xpoint2, (int)ypoint2);
+                g.DrawLine(new Pen(Color.Black, 2), (int)xpoint1, (int)ypoint1, (int)xpoint2, (int)ypoint2);
 
                 if (t > 0.5 && berziew.X == 0)
                     t = t;
@@ -407,8 +448,8 @@ namespace GKprojekt3
             int xpunkt1 = (int)(500 * x3 + margin);
             int ypunkt1 = 600 - (int)(500 * y3 + margin);
 
-          
-            
+
+
             podkowa.Invalidate();
         }
 
@@ -435,5 +476,249 @@ namespace GKprojekt3
             }
             controlPoints.Reverse();
         }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            SaveFileDialog sfd = new SaveFileDialog();
+            sfd.Filter = "Images|*.png;*.bmp;*.jpg";
+            ImageFormat format = ImageFormat.Png;
+            if (sfd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                string ext = System.IO.Path.GetExtension(sfd.FileName);
+                switch (ext)
+                {
+                    case ".jpg":
+                        format = ImageFormat.Jpeg;
+                        break;
+                    case ".bmp":
+                        format = ImageFormat.Bmp;
+                        break;
+                }
+                Bitmap capturedImage = CaptureControl(podkowa);
+                capturedImage.Save(sfd.FileName, format);
+
+
+            }
+
+
+
+
+        }
+
+
+
+
+
+        private Bitmap CaptureControl(Control control)
+        {
+            Bitmap controlBitmap = new Bitmap(control.Width, control.Height);
+            using (Graphics g = Graphics.FromImage(controlBitmap))
+            {
+                Rectangle rect = control.RectangleToScreen(control.ClientRectangle);
+                g.CopyFromScreen(rect.Location, Point.Empty, control.ClientRectangle.Size);
+               
+            }
+            return controlBitmap;
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            using (ColorDialog colorDialog = new ColorDialog())
+            {
+               
+                colorDialog.AllowFullOpen = true;
+                colorDialog.ShowHelp = true;
+
+                
+                if (colorDialog.ShowDialog() == DialogResult.OK)
+                {
+                   
+                    pictureBox1.BackColor = colorDialog.Color;
+                    kolorek = colorDialog.Color;
+                    funkcjalaby();
+
+                  
+                }
+            }
+        }
+
+        double ColorError(double R1, double G1, double B1, double R, double G, double B)
+        {
+          
+            return Math.Sqrt(Math.Pow(R1 - R, 2) + Math.Pow(G1 - G, 2) + Math.Pow(B1 - B, 2));
+        }
+
+
+        public  (double,double,double) funkcjawidmo(List<Point> controlPoints)
+        {
+            XYZ punktwyznaczony = new XYZ(0, 0, 0);
+
+            double xpoint1 = controlPoints[0].X;
+            double ypoint1 = controlPoints[0].Y;
+            double xpointend = controlPoints.Last().X;
+            double ypointed = controlPoints.Last().Y;
+
+            int ggg = 0;
+            double xpoint2 = 0;
+            double ypoint2 = 0;
+            //obliczenie punktów bezierewa
+            for (double t = 0; t <= 1; t += 0.01)
+            {
+                int i = 0;
+                xpoint2 = 0;
+                ypoint2 = 0;
+                //obliczenie danego punktu
+                foreach (var points in controlPoints)
+                {
+
+                    xpoint2 += points.X * Bernstein(i, controlPoints.Count - 1, t);
+                    ypoint2 += points.Y * Bernstein(i, controlPoints.Count - 1, t);
+                    i++;
+
+                }
+
+
+
+                // przeksztalcenie na wspoprzedne fali 
+                double x1 = (xpoint1 - margin - 20) / 500 * 400 + 380;
+                double x2 = (xpoint2 - margin - 20) / 500 * 400 + 380;
+                double y1 = ((ypoint1 - margin) / 500 * 1.8);
+                double y2 = ((ypoint2 - margin) / 500 * 1.8);
+
+                XYZ p1 = dane[(int)x1];
+                XYZ p2 = dane[(int)x2];
+                //calkowanie prostokatne punktu srodowego 
+                double xm = (x1 + x2) / 2;
+                double ym = (y1 + y2) / 2;
+                XYZ pm = dane[(int)xm];
+
+                int roznica = Math.Abs((((int)xpoint2 - (int)xpoint1)));
+                //wzór 
+                punktwyznaczony.X += pm.X * ym * roznica;
+                punktwyznaczony.Y += pm.Y * ym * roznica;
+                punktwyznaczony.Z += pm.Z * ym * roznica;
+                
+               
+
+               
+
+
+
+                //przepisanie punktu do ca³kowania
+                xpoint1 = xpoint2;
+                ypoint1 = ypoint2;
+                ggg++;
+            }
+
+           
+            double suma2 = punktwyznaczony.X + punktwyznaczony.Y + punktwyznaczony.Z;
+            double x3 = 0; ; double y3 = 0;
+            if (suma2 != 0)
+            {
+                x3 = punktwyznaczony.X / suma2;
+                y3 = punktwyznaczony.Y / suma2;
+            }
+
+
+            
+          
+
+            (int R1, int G1, int B1) = ConvertXYZtoRGB(punktwyznaczony.X / k, punktwyznaczony.Y / k, punktwyznaczony.Z / k);
+
+
+
+            return (R1, G1, B1);
+
+        }
+
+
+
+        void funkcjalaby()
+        {
+            List<Point> startowe = new List<Point>
+    {
+        new Point(100, 100), 
+        new Point(150, 150), 
+        new Point(200, 150), 
+        new Point(250, 100)  
+    };
+
+            double errorMinimalny = 10.0;
+            double currentError;
+            int maxIterations = 1000;
+
+            //for (int iteration = 0; iteration < maxIterations; iteration++)
+            //{
+            //    Color zwidma=funkcjawidmo(startowe); 
+
+
+
+            //    // blad kolor
+            //    currentError = ColorError(zwidma, kolorek);
+
+
+            //    if (currentError <= errorMinimalny)
+            //    {
+            //        break;
+            //    }
+
+
+
+
+            //    if (iteration == 999)
+            //        iteration = iteration;
+            //}
+            List<Point> najlepsze = new List<Point>();
+            double currentmin = double.MaxValue;
+            Color a, b;
+            double R, G, B;
+            for (int i = 70; i < 570; i+=40)
+            {
+                startowe[0] = new Point(i, startowe[0].Y);
+                if (startowe[0].X < startowe[1].X)
+                for (int j = 70; j < 570; j += 40)
+                {
+                    startowe[1] = new Point(j, startowe[1].Y);
+                      
+                            for (int z = 70; z < 570; z += 40)
+                    {
+                        startowe[2] = new Point(z, startowe[2].Y);
+                               
+                                    for (int x = 70; x < 570; x += 40)
+                        {
+                            startowe[3] = new Point(x, startowe[3].Y);
+                            (R,G,B) = funkcjawidmo(startowe);
+                            currentError = ColorError(R,G,B, kolorek.R,kolorek.G,kolorek.B);
+                           
+                            if(currentError<currentmin)
+                            {
+                                currentmin = currentError;
+                                najlepsze = new List<Point>( startowe);
+                                
+
+                            }
+                        }
+
+                    }
+
+                
+                }
+
+            }
+
+
+            currentmin = currentmin;
+
+            //if (true)
+            //{
+            //    kolorek = kolorek;
+            //}
+          //  najlepsze.Sort((a, b) => a.X.CompareTo(b.X));
+            controlPoints = najlepsze;
+            widmo.Refresh();
+            podkowa.Refresh();
+        }
+
+       
     }
 }
